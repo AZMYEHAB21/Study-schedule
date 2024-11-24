@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الجدول الزمني التفاعلي المحسن</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        body.dark-mode {
+            background-color: var(--dark-color);
+            color: var(--light-color);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            transition: background-color 0.3s;
+        }
+        .dark-mode .container {
+            background-color: #444;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 12px;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+        .dark-mode th, .dark-mode td {
+            border-color: #555;
+        }
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+        .dark-mode th {
+            background-color: #555;
+        }
+        tr:hover td {
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+        .dark-mode tr:hover td {
+            background-color: #666;
+        }
+        .check {
+            color: var(--success-color);
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .note {
+            font-size: 14px;
+            color: var(--secondary-color);
+        }
+        .dark-mode .note {
+            color: #aaa;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover {
+            filter: brightness(90%);
+        }
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .lecture {
+            position: relative;
+            cursor: pointer;
+        }
+        .lecture::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 14px;
+            animation: pulse 2s infinite;
+        }
+        #countdown {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            color: var(--primary-color);
+        }
+        #progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            height: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        #progress {
+            width: 0%;
+            height: 100%;
+            background-color: var(--success-color);
+            border-radius: 10px;
+            transition: width 0.5s;
+        }
+        #notifications {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .notification {
+            background-color: var(--info-color);
+            color: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            opacity: 0;
+            transition: opacity 0.5s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        #color-picker {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+        #notes-modal, #contact-modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 5px;
+        }
+        .close {
+            color: #aaa;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #notes-input {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        .shake {
+            animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        #contact-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        #contact-button:hover {
+            transform: scale(1.1);
+        }
+        @media print {
+            .controls, #countdown, #progress-bar, #color-picker, #notifications, #contact-button {
+                display: none;
+            }
+            .container {
+                box-shadow: none;
+            }
+            body {
+                background-color: white;
+            }
+        }
+        @media (max-width: 768px) {
+            .container {
+                overflow-x: auto;
+            }
+            table {
+                min-width: 800px;
+            }
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-buttons {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button id="toggleDarkMode" class="btn btn-secondary">تبديل الوضع الليلي</button>
+        <button id="print-button" class="btn btn-primary">طباعة الجدول</button>
+        <div class="filter-buttons">
+            <button class="btn btn-primary filter-btn" data-day="all">الكل</button>
+            <button class="btn btn-primary filter-btn" data-day="الأحد">الأحد</button>
+            <button class="btn btn-primary filter-btn" data-day="الإثنين">الإثنين</button>
+            <button class="btn btn-primary filter-btn" data-day="الثلاثاء">الثلاثاء</button>
+            <button class="btn btn-primary filter-btn" data-day="الأربعاء">الأربعاء</button>
+            <button class="btn btn-primary filter-btn" data-day="الخميس">الخميس</button>
+            <button class="btn btn-primary filter-btn" data-day="الجمعة">الجمعة</button>
+            <button class="btn btn-primary filter-btn" data-day="السبت">السبت</button>
+        </div>
+    </div>
+
+    <div id="countdown">المحاضرة القادمة في: 00:00:00</div>
+
+    <div id="progress-bar">
+        <div id="progress"></div>
+    </div>
+
+    <div id="color-picker">
+        <div class="color-option" style="background-color: #007bff;" data-color="#007bff"></div>
+        <div class="color-option" style="background-color: #28a745;" data-color="#28a745"></div>
+        <div class="color-option" style="background-color: #dc3545;" data-color="#dc3545"></div>
+        <div class="color-option" style="background-color: #ffc107;" data-color="#ffc107"></div>
+    </div>
+
+    <div class="container">
+        <table id="timetable">
+            <thead>
+                <tr>
+                    <th>اليوم</th>
+                    <th>الجلسة الأولى (8-10 صباحاً)</th>
+                    <th>الجلسة الثانية (10:30-12:30)</th>
+                    <th>الجلسة الثالثة (1-3)</th>
+                    <th>الجلسة الرابعة (3:30-5:30)</th>
+                    <th>الجلسة (6-8) مساءً</th>
+                    <th>الجلسة (8-10) مساءً</th>
+                    <th>ملاحظات</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>الأحد</td>
+                    <td class="lecture">محاسبة التكاليف (محاضرة 1)</td>
+                    <td class="lecture">لغة الأعمال (محاضرة 1)</td>
+                    <td class="lecture">تسويق (محاضرة 1)</td>
+                    <td class="lecture">التفكير الإبتكاري (محاضرة 1)</td>
+                    <td class="lecture">تطبيقات الإنترنت (محاضرة 1)</td>
+                    <td>الجيم</td>
+                    <td>
+                        <span class="note">مراجعة المحاضرة جيداً</span>
+                        <span class="check">✓</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>الإثنين</td>
+                    <td>فارغ</td>
+                    <td>فارغ</td>
+                    <td>فارغ</td>
+                    <td>فارغ</td>
+                    <td>فارغ</td>
+                    <td>الجيم</td>
+                    <td>
+                        <span class="note">استكمال محاضرات جديدة لاحقاً</span>
+                        <span class="check">✓</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>الثلاثاء</td>
+                    <td class="lecture">محاسبة التكاليف (محاضرة 2)</td>
+                    <td class="lecture">لغة الاعمال (محاضرة 2)</td>
+                    <td class="lecture">تسويق (محاضرة 2)</td>
+                    <td class="lecture">التفكير الإبتكاري (محاضرة 2)</td>
+                    <td class="lecture">تطبيقات الإنترنت (محاضرة 2)</td>
+                    <td>الجيم</td>
+                    <td><span class="check">✓</span></td>
+                </tr>
+                <tr>
+                    <td>الأربعاء</td>
+                    <td>فارغ</td>
+                    <td>فارغ</td>
+                    <td>فارغ</td>
+                    <td>فارغ</td>
+                    <td>فارغ</td>
+                    <td>الجيم</td>
+                    <td><span class="check">✓</span></td>
+                </tr>
+                <tr>
+                    <td>الخميس</td>
+                    <td class="lecture">محاسبة التكاليف (محاضرة 3)</td>
+                    <td class="lecture">لغة الأعمال (محاضرة 3)</td>
+                    <td class="lecture">تسويق (محاضرة 3)</td>
+                    <td class="lecture">التفكير الإبتكاري (محاضرة 3)</td>
+                    <td class="lecture">تطبيقات الإنترنت (محاضرة 3)</td>
+                    <td>الجيم</td>
+                    <td><span class="check">✓</span></td>
+                </tr>
+                <tr>
+                    <td>الجمعة</td>
+                    <td>مراجعة محاضرات الأسبوع</td>
+                    <td>حل أسئلة وتطبيقات</td>
+                    <td class="lecture">تسويق (محاضرة 4)</td>
+                    <td class="lecture">لغة الأعمال (محاضرة 4)</td>
+                    <td class="lecture">التفكير الإبتكاري (محاضرة 4)</td>
+                    <td>راحة</td>
+                    <td>
+                        <span class="note">تخصيص وقت إضافي إذا لزم الأمر</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>السبت</td>
+                    <td>فارغ</td>
+                    <td>فارغ</td>
+                    <td>فارغ</td>
+                    <td>فارغ</td>
+                    <td>فارغ</td>
+                    <td>الجيم</td>
+                    <td><span class="check">✓</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="notifications"></div>
+
+    <div id="notes-modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>إضافة ملاحظة</h2>
+            <textarea id="notes-input" placeholder="اكتب ملاحظتك هنا..."></textarea>
+            <button id="save-note" class="btn btn-primary">حفظ الملاحظة</button>
+        </div>
+    </div>
+
+    <div id="contact-modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>اتصل بنا</h2>
+            <p>للتواصل معنا، يرجى الاتصال على الرقم التالي:</p>
+            <p><a href="tel:01220373091">01220373091</a></p>
+        </div>
+    </div>
+
+    <button id="contact-button">📞</button>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/confetti-js@0.0.18/dist/index.min.js"></script>
+    <script>
+        // تبديل الوضع الليلي/النهاري
+        const toggleDarkMode = document.getElementById('toggleDarkMode');
+        toggleDarkMode.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+            playSound('toggle');
+        });
+
+        // استعادة وضع الألوان المحفوظ
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+
+        // تبديل حالة علامات الاختيار
+        document.querySelectorAll('.check').forEach(check => {
+            check.addEventListener('click', function() {
+                this.textContent = this.textContent === '✓' ? '✗' : '✓';
+                this.style.color = this.textContent === '✓' ? 'var(--success-color)' : 'var(--danger-color)';
+                updateProgress();
+                saveState();
+                playSound('check');
+                if (this.textContent === '✓') {
+                    showConfetti();
+                }
+            });
+        });
+
+        // تصفية الجدول حسب اليوم
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const tableRows = document.querySelectorAll('#timetable tbody tr');
+
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const day = button.getAttribute('data-day');
+                tableRows.forEach(row => {
+                    if (day === 'all' || row.cells[0].textContent === day) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                playSound('filter');
+            });
+        });
+
+        // العد التنازلي للمحاضرة القادمة
+        function updateCountdown() {
+            const now = new Date();
+            const nextLecture = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
+            if (now > nextLecture) nextLecture.setDate(nextLecture.getDate() + 1);
+            
+            const diff = nextLecture - now;
+            const hours = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+
+            document.getElementById('countdown').textContent = 
+                `المحاضرة القادمة في: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        setInterval(updateCountdown, 1000);
+
+        // تحديث شريط التقدم
+        function updateProgress() {
+            const totalChecks = document.querySelectorAll('.check').length;
+            const completedChecks = document.querySelectorAll('.check:not(:empty)').length;
+            const progress = (completedChecks / totalChecks) * 100;
+            document.getElementById('progress').style.width = `${progress}%`;
+        }
+
+        updateProgress();
+
+        // نظام التنبيهات
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.getElementById('notifications').appendChild(notification);
+            setTimeout(() => {
+                notification.style.opacity = '1';
+            }, 100);
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    notification.remove();
+                }, 500);
+            }, 3000);
+            playSound('notification');
+        }
+
+        // تنبيه كل ساعة (للعرض فقط، يمكن تغييره إلى ساعة في الإنتاج)
+        setInterval(() => {
+            showNotification('تذكير: راجع جدولك الزمني!');
+        }, 60000); // كل دقيقة للعرض، يمكن تغييره إلى 3600000 للساعة
+
+        // تخصيص الألوان
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const color = this.getAttribute('data-color');
+                document.documentElement.style.setProperty('--primary-color', color);
+                localStorage.setItem('primaryColor', color);
+                playSound('color');
+            });
+        });
+
+        // استعادة اللون المحفوظ
+        const savedColor = localStorage.getItem('primaryColor');
+        if (savedColor) {
+            document.documentElement.style.setProperty('--primary-color', savedColor);
+        }
+
+        // حفظ حالة الجدول في التخزين المحلي
+        function saveState() {
+            const checks = Array.from(document.querySelectorAll('.check')).map(check => check.textContent);
+            localStorage.setItem('scheduleState', JSON.stringify(checks));
+        }
+
+        // استعادة حالة الجدول من التخزين المحلي
+        function loadState() {
+            const savedState = localStorage.getItem('scheduleState');
+            if (savedState) {
+                const checks = JSON.parse(savedState);
+                document.querySelectorAll('.check').forEach((check, index) => {
+                    check.textContent = checks[index];
+                    check.style.color = checks[index] === '✓' ? 'var(--success-color)' : 'var(--danger-color)';
+                });
+                updateProgress();
+            }
+        }
+
+        // طباعة الجدول
+        document.getElementById('print-button').addEventListener('click', () => {
+            window.print();
+            playSound('print');
+        });
+
+        // تحميل الحالة عند تحميل الصفحة
+        window.addEventListener('load', loadState);
+
+        // إضافة تفاعل عند النقر على خلايا المحاضرات
+        document.querySelectorAll('.lecture').forEach(cell => {
+            cell.addEventListener('click', function() {
+                showNotification(`تم النقر على: ${this.textContent}`);
+                this.classList.add('shake');
+                setTimeout(() => this.classList.remove('shake'), 500);
+                playSound('lecture');
+            });
+        });
+
+        // إضافة ن��ام الملاحظات
+        const modal = document.getElementById('notes-modal');
+        const closeBtn = document.querySelector('#notes-modal .close');
+        const saveNoteBtn = document.getElementById('save-note');
+        const notesInput = document.getElementById('notes-input');
+
+        document.querySelectorAll('td:last-child').forEach(cell => {
+            cell.addEventListener('dblclick', function() {
+                modal.style.display = 'block';
+                notesInput.value = this.querySelector('.note')?.textContent || '';
+                playSound('modal');
+            });
+        });
+
+        closeBtn.onclick = function() {
+            modal.style.display = 'none';
+            playSound('close');
+        }
+
+        saveNoteBtn.onclick = function() {
+            const activeCell = document.querySelector('td:last-child:hover');
+            if (activeCell) {
+                let noteSpan = activeCell.querySelector('.note');
+                if (!noteSpan) {
+                    noteSpan = document.createElement('span');
+                    noteSpan.className = 'note';
+                    activeCell.insertBefore(noteSpan, activeCell.firstChild);
+                }
+                noteSpan.textContent = notesInput.value;
+            }
+            modal.style.display = 'none';
+            playSound('save');
+        }
+
+        // إضافة زر الاتصال
+        const contactButton = document.getElementById('contact-button');
+        const contactModal = document.getElementById('contact-modal');
+        const closeContactBtn = document.querySelector('#contact-modal .close');
+
+        contactButton.addEventListener('click', () => {
+            contactModal.style.display = 'block';
+            playSound('contact');
+        });
+
+        closeContactBtn.onclick = function() {
+            contactModal.style.display = 'none';
+            playSound('close');
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+                playSound('close');
+            }
+            if (event.target == contactModal) {
+                contactModal.style.display = 'none';
+                playSound('close');
+            }
+        }
+
+        // إضافة تأثيرات صوتية
+        function playSound(action) {
+            const audio = new Audio();
+            switch(action) {
+                case 'toggle':
+                    audio.src = 'https://www.soundjay.com/buttons/sounds/button-16.mp3';
+                    break;
+                case 'check':
+                    audio.src = 'https://www.soundjay.com/buttons/sounds/button-09.mp3';
+                    break;
+                case 'filter':
+                    audio.src = 'https://www.soundjay.com/buttons/sounds/button-20.mp3';
+                    break;
+                case 'notification':
+                    audio.src = 'https://www.soundjay.com/buttons/sounds/button-3.mp3';
+                    break;
+                case 'color':
+                    audio.src = 'https://www.soundjay.com/buttons/sounds/button-28.mp3';
+                    break;
+                case 'print':
+                    audio.src = 'https://www.soundjay.com/buttons/sounds/button-14.mp3';
+                    break;
+                case 'lecture':
+                    audio.src = 'https://www.soundjay.com/buttons/sounds/button-19.mp3';
+                    break;
+                case 'modal':
+                case 'contact':
+                    audio.src = 'https://www.soundjay.com/buttons/sounds/button-21.mp3';
+                    break;
+                case 'close':
+                    audio.src = 'https://www.soundjay.com/buttons/sounds/button-10.mp3';
+                    break;
+                case 'save':
+                    audio.src = 'https://www.soundjay.com/buttons/sounds/button-1.mp3';
+                    break;
+                default:
+                    audio.src = 'https://www.soundjay.com/buttons/sounds/button-16.mp3';
+            }
+            audio.play();
+        }
+
+        // إضافة تأثير الكونفيتي
+        const confettiSettings = { target: 'confetti-canvas', max: 80, size: 2, animate: true, props: ['circle', 'square', 'triangle', 'line'], colors: [[165,104,246],[230,61,135],[0,199,228],[253,214,126]], clock: 25, rotate: true, width: 1920, height: 1080, start_from_edge: true, respawn: true };
+        const confetti = new ConfettiGenerator(confettiSettings);
+
+        function showConfetti() {
+            confetti.render();
+            setTimeout(() => {
+                confetti.clear();
+            }, 3000);
+        }
+
+        // إضافة خاصية السحب والإفلات للجدول
+        let dragSrcEl = null;
+
+        function handleDragStart(e) {
+            dragSrcEl = this;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            this.classList.add('over');
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            if (dragSrcEl != this) {
+                dragSrcEl.innerHTML = this.innerHTML;
+                this.innerHTML = e.dataTransfer.getData('text/html');
+            }
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            document.querySelectorAll('.lecture').forEach(function (item) {
+                item.classList.remove('over');
+            });
+        }
+
+        document.querySelectorAll('.lecture').forEach(function(item) {
+            item.setAttribute('draggable', true);
+            item.addEventListener('dragstart', handleDragStart, false);
+            item.addEventListener('dragenter', handleDragEnter, false);
+            item.addEventListener('dragover', handleDragOver, false);
+            item.addEventListener('dragleave', handleDragLeave, false);
+            item.addEventListener('drop', handleDrop, false);
+            item.addEventListener('dragend', handleDragEnd, false);
+        });
+    </script>
+</body>
+</html>
